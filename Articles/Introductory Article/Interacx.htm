@@ -1,0 +1,52 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Language" content="en-us">
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<title>Introduction</title>
+</head>
+
+<body>
+
+<p>Interacx - Schema Driven Client/Server Automation For Web Applications</p>
+<h2>Introduction</h2>
+<p>The website I'm working on for a client involves a lot of grids and data 
+entry forms for managing users, meeting, participants, and so forth.&nbsp; All 
+of this requires defining data sources, binding elements to the jqWidgets 
+controls, and creating JSON objects for the AJAX postbacks.&nbsp; This is all 
+essentially a repeatable pattern based on the &quot;view schema&quot; for each grid.&nbsp; 
+Not only is this a repeatable pattern for each grid, but several components of 
+the grid are themselves essentially repetitive information.&nbsp; I do not like 
+repeating myself.</p>
+<p>Furthermore, the &quot;view schema&quot; is essentially the equivalent of a database 
+view -- a composite of tables joined by their foreign key relationships.&nbsp; 
+So the other half of the coin here is to automate the CRUD operations on the 
+back end that support the user interactions on the front end.&nbsp; The usual 
+approach, an ORM, again an exercise in repetition and unnecessary steps: create 
+a model in code (but wait, we already have a schema in the database, don't we?), 
+load the data into an object (models are basically just glorified bags in most 
+cases), translate the model into JSON (can't we just translate a DataTable into 
+JSON?&nbsp; Why, yes we can!) and ship it off to the client when it requests the 
+data.&nbsp; Again, I do not like repeating myself.</p>
+<p>In this article, I am going to do demonstrate two things:</p>
+<ol>
+	<li>How to generate, using a &quot;view schema&quot;, all the pieces to dynamically 
+	render a grid and the popup &quot;add record&quot; form.</li>
+	<li>How to use a lightweight No-Orm SQL generator on the backend for the 
+	CRUD operations</li>
+</ol>
+<p>The foundation of this technique is the &quot;view schema.&quot;&nbsp; In Part II, I 
+will demonstrate creating and managing view schemas in the browser and how your 
+application can immediately reflect changes made to the view schema--a nice 
+feature for when the customer asks (for example) &quot;can I add a this field&quot; or 
+&quot;can we move this column over to <i>here</i>.&quot;</p>
+<p>The various components that I'll be covering in this article are illustrated 
+in this diagram:</p>
+<p align="center">
+<img border="0" src="architecture.png" width="564" height="420"></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+
+</body>
+
+</html>
