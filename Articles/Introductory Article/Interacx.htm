@@ -44,6 +44,192 @@ feature for when the customer asks (for example) &quot;can I add a this field&qu
 in this diagram:</p>
 <p align="center">
 <img border="0" src="architecture.png" width="564" height="420"></p>
+<p align="left">
+We'll begin by looking at the manually created grid and what we need to do to 
+make it respond dynamically to a view schema.</p>
+<h2>Redundancy: Come Join the Dark Side</h2>
+<p><img border="0" src="grid1.png" width="803" height="211"></p>
+<p>Here we have jqxGrid control with a variety of features.&nbsp; Besides the 
+sorting, column grouping, and column sizing configuration options, the above 
+screenshot illustrates several different types of data:</p>
+<ul>
+	<li>Checkboxes for whether the account is disabled or not</li>
+	<li>A date/time field, which is read-only</li>
+	<li>A dropdown for the user's role</li>
+	<li>Text input</li>
+<li><font color="#FF0000">Masked input for the phone number</font></li>
+</ul>
+<p>While the grid cells are editable and post back immediately to the server, we 
+use a popup window for creating new users:</p>
+<p><img border="0" src="input1.png" width="502" height="321"></p>
+<p>Looking at the page's source code, we see several redundancies.</p>
+<h3>Initialization of the New User popup Controls</h3>
+<p>Here we see binding the jqWidget controls to the HTML elements using the 
+element ID's:</p>
+<pre>$('#UserName').jqxInput({ width: '200px', height: '20px', theme: theme, width: &quot;100%&quot; })
+$('#Email').jqxInput({ width: '200px', height: '20px', theme: theme, width: &quot;100%&quot; })
+$('#FirstName').jqxInput({ width: '200px', height: '20px', theme: theme, width: &quot;100%&quot; })
+$('#LastName').jqxInput({ width: '200px', height: '20px', theme: theme, width: &quot;100%&quot; })
+$('#Phone').jqxInput({ width: '200px', height: '20px', theme: theme, width: &quot;100%&quot; })
+$('#Password').jqxPasswordInput({ width: '200px', height: '20px', showStrength: false, showStrengthPosition: 'right', theme: theme, width: &quot;100%&quot; })
+$(&quot;#RoleName&quot;).jqxComboBox({ source: ['Super Admin', 'Admin', 'Analyst', 'Guest'], selectedIndex: 4, height: '20px', width: '100%' })</pre>
+<p>Notice also the hard-coded combobox list.</p>
+<h3>Initialization of Rules</h3>
+<p>Here we see validation rules being initialized:</p>
+<pre>$('#newUser').jqxValidator({
+  rules: [
+    { input: '#UserName', message: 'Required field', action: 'keyup, blur', rule: 'required' },
+    { input: '#Email', message: 'Required field', action: 'keyup, blur', rule: 'required' },
+    { input: '#FirstName', message: 'Required field', action: 'keyup, blur', rule: 'required' },
+    { input: '#LastName', message: 'Required field', action: 'keyup, blur', rule: 'required' },
+    { input: '#Password', message: 'Required field', action: 'keyup, blur', rule: 'required' },
+    ], hintType: 'label'
+});</pre>
+<h3>Datasource Initialization</h3>
+<p>Here the datasource is initialized and the jqxGrid will use an AJAX call to 
+populate the grid:</p>
+<pre>var source =
+{
+  dataType: &quot;json&quot;,
+  dataFields: [
+    { name: 'Id', type: 'string' },
+    { name: 'UserName', type: 'string' },
+    { name: 'Email', type: 'string' },
+    { name: 'Phone', type: 'string' },
+    { name: 'FirstName', type: 'string' },
+    { name: 'LastName', type: 'string' },
+    { name: 'Disabled', type: 'bool' },
+    { name: 'LastSignOn', type: 'date' },
+    { name: 'RoleName', type: 'string' }
+  ],
+  id: 'Id',
+  url: '/admin/userlist'
+};</pre>
+<h3>Column Definitions</h3>
+<p>Yet again, we see a similar list of fields, this time to initialize the 
+columns.&nbsp; If you get the idea or are just getting bored, feel free to skip 
+ahead.&nbsp; But don't forget, I had to type all this stuff in!</p>
+<pre>columns: [
+  { text: 'User Name', datafield: 'UserName', width: '10%', align: 'center' },
+  { text: 'Role', datafield: 'RoleName', width: '10%', align: 'center',
+    columntype: 'dropdownlist',
+    createeditor: function (row, cellvalue, editor) {
+      editor.jqxDropDownList({ source: ['Super Admin', 'BMBFA Admin', 'Center Admin', 'Analyst', 'Guest'] })
+    },
+  },
+  { text: 'Last Sign On', datafield: 'LastSignOn', columntype: 'datetime', width: '15%', cellsformat: 'MM/dd/yyyy hh:mm tt', align: 'center', editable: false, filtertype: 'range' },
+  { text: 'Disabled', datafield: 'Disabled', columntype: 'checkbox', width: '10%', align: 'center', filtertype: 'bool' },
+  { text: 'First Name', datafield: 'FirstName', width: '15%', columngroup: 'Name', align: 'center' },
+  { text: 'Last Name', datafield: 'LastName', width: '15%', columngroup: 'Name', align: 'center' },
+  { text: 'Email', datafield: 'Email', width: '15%', columngroup: 'Contact', align: 'center' },
+  { text: 'Phone', datafield: 'Phone', width: '10%', columngroup: 'Contact', align: 'center' }
+],
+columngroups: [
+  { text: 'Name', name: 'Name', align: 'center' },
+  { text: 'Contact', name: 'Contact', align: 'center' }
+]</pre>
+<h3>Data For Create User Callback</h3>
+<p>And again, here we create key-value pairs for the AJAX callback when creating 
+a user:</p>
+<pre>var datarow = {
+  UserName: $(&quot;#UserName&quot;).val(),
+  Email: $(&quot;#Email&quot;).val(),
+  FirstName: $(&quot;#FirstName&quot;).val(),
+  LastName: $(&quot;#LastName&quot;).val(),
+  Phone: $(&quot;#Phone&quot;).val(),
+  Password: $(&quot;#Password&quot;).val(),
+  RoleName: $(&quot;#RoleName&quot;).val()
+}</pre>
+<h3>Last But Not Least, the HTML</h3>
+<p>And finally, we have the HTML for the popup window:</p>
+<pre>&lt;div id=&quot;newUser&quot;&gt;
+  &lt;div&gt;New User&lt;/div&gt;
+    &lt;div class='row rowlabel' style='width:100%;'&gt;
+      &lt;div class='col-sm-4 padding-top4'&gt;User Name:&lt;/div&gt;
+      &lt;div class='col-sm-6'&gt;&lt;input style='padding-left:3px' id='UserName'/&gt;&lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div class='row rowlabel' style='width:100%;'&gt;
+      &lt;div class='col-sm-4 padding-top4'&gt;Role:&lt;/div&gt;
+      &lt;div class='col-sm-6' &gt;
+        &lt;div id=&quot;RoleName&quot;&gt;&lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div class='row rowlabel' style='width:100%;'&gt;
+      &lt;div class='col-sm-4 padding-top4'&gt;Email:&lt;/div&gt;
+      &lt;div class='col-sm-6'&gt;&lt;input style='padding-left:3px' id='Email'/&gt;&lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div class='row rowlabel' style='width:100%;'&gt;
+      &lt;div class='col-sm-4 padding-top4'&gt;First Name:&lt;/div&gt;
+      &lt;div class='col-sm-6'&gt;&lt;input style='padding-left:3px' id='FirstName'/&gt;&lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div class='row rowlabel' style='width:100%;'&gt;
+      &lt;div class='col-sm-4 padding-top4'&gt;Last Name:&lt;/div&gt;
+      &lt;div class='col-sm-6'&gt;&lt;input style='padding-left:3px' id='LastName'/&gt;&lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div class='row rowlabel' style='width:100%;'&gt;
+      &lt;div class='col-sm-4 padding-top4'&gt;Phone:&lt;/div&gt;
+      &lt;div class='col-sm-6'&gt;&lt;input style='padding-left:3px' id='Phone'/&gt;&lt;/div&gt;
+    &lt;/div&gt;
+      &lt;div class='row rowlabel' style='width:100%;'&gt;
+      &lt;div class='col-sm-4 padding-top4'&gt;Password:&lt;/div&gt;
+      &lt;div class='col-sm-6'&gt;&lt;input style='padding-left:3px' id='Password' type='password'/&gt;&lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div class='row rowlabel' style='width:100%;'&gt;
+      &lt;div class='col-sm-12 padding-top4 center-text'&gt;
+        &lt;input type=&quot;button&quot; id=&quot;Save&quot; value=&quot;Save&quot;/&gt;
+        &lt;input type=&quot;button&quot; id=&quot;Cancel&quot; value=&quot;Cancel&quot;/&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</pre>
+<h2>Do You See The Redundancy?</h2>
+<p>Hopefully, you see the pattern of redundancy here, in that all these aspects 
+of the page source:</p>
+<ul>
+	<li>Initialization of controls</li>
+	<li>Initialization of rules</li>
+	<li>Datasource initialization</li>
+	<li>Column definitions</li>
+	<li>Data for the create user callback</li>
+	<li>The HTML itself</li>
+</ul>
+<p>All of this has been written manually.&nbsp; <b>And all of that error prone 
+typing would be unnecessary if we were smart about how we did things and used a 
+view schema</b>--metadata if you will.&nbsp; <b>Furthermore, don't forget that 
+this view schema will also be used to generate the SQL for the CRUD operations</b> 
+-- we're also eliminating redundancy on the server-side as well!</p>
+<p>Let's start correcting this problem by defining some JSON for initializing 
+the &quot;new user&quot; controls.&nbsp; The first thing we need is an array of fields and 
+at a minimum, some indication as to how to render the field:</p>
+<pre>{&quot;fields&quot;: [
+  {&quot;name&quot;: &quot;Id&quot;},
+  {&quot;name&quot;: &quot;UserName&quot;, &quot;render&quot;: &quot;input&quot;},
+  {&quot;name&quot;: &quot;RoleName&quot;, &quot;render&quot;: &quot;lookup&quot;, &quot;lookupdata&quot;:
+    [
+      {&quot;value&quot;: &quot;Super Admin&quot;},
+      {&quot;value&quot;: &quot;Admin&quot;},
+      {&quot;value&quot;: &quot;Analyst&quot;},
+      {&quot;value&quot;: &quot;Guest&quot;}
+    ]},
+  {&quot;name&quot;: &quot;Password&quot;, &quot;render&quot;: &quot;password&quot;},
+  {&quot;name&quot;: &quot;Email&quot;, &quot;render&quot;: &quot;input&quot;},
+  {&quot;name&quot;: &quot;FirstName&quot;, &quot;render&quot;: &quot;input&quot;},
+  {&quot;name&quot;: &quot;LastName&quot;, &quot;render&quot;: &quot;input&quot;},
+  {&quot;name&quot;: &quot;Disabled&quot;, &quot;render&quot;: &quot;checkbox&quot;},
+  {&quot;name&quot;: &quot;LastSignOn&quot;, &quot;render&quot;: &quot;datetime&quot;}
+]}</pre>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
 <p>&nbsp;</p>
 <p>&nbsp;</p>
 

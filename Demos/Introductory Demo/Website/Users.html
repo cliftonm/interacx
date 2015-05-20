@@ -1,0 +1,308 @@
+﻿<head>
+    <title>Users</title>
+    <link type="text/css" rel="stylesheet" href="/jqwidgets/styles/jqx.base.css" />
+    <link type="text/css" rel="stylesheet" href="/jqwidgets/styles/jqx.energyblue.css" />
+
+    <script type="text/javascript" src="/jqwidgets/jqxcore.js"></script>
+    <script type="text/javascript" src="/jqwidgets/jqxdata.js"></script> 
+    <script type="text/javascript" src="/jqwidgets/jqxbuttons.js"></script>
+    <script type="text/javascript" src="/jqwidgets/jqxinput.js"></script>
+    <script type="text/javascript" src="/jqwidgets/jqxpasswordinput.js"></script>
+    <script type="text/javascript" src="/jqwidgets/jqxtooltip.js"></script>
+    <script type="text/javascript" src="/jqwidgets/jqxscrollbar.js"></script>
+    <script type="text/javascript" src="/jqwidgets/jqxvalidator.js"></script>
+    <script type="text/javascript" src="/jqwidgets/jqxmenu.js"></script>
+    <script type="text/javascript" src="/jqwidgets/jqxcheckbox.js"></script>
+    <script type="text/javascript" src="/jqwidgets/jqxlistbox.js"></script>
+    <script type="text/javascript" src="/jqwidgets/jqxdropdownlist.js"></script>
+    <script type="text/javascript" src="/jqwidgets/jqxcombobox.js"></script>
+    <script type="text/javascript" src="/jqwidgets/jqxgrid.js"></script>
+    <script type="text/javascript" src="/jqwidgets/jqxgrid.sort.js"></script> 
+    <script type="text/javascript" src="/jqwidgets/jqxgrid.filter.js"></script> 
+    <script type="text/javascript" src="/jqwidgets/jqxgrid.pager.js"></script> 
+    <script type="text/javascript" src="/jqwidgets/jqxgrid.selection.js"></script> 
+    <script type="text/javascript" src="/jqwidgets/jqxgrid.edit.js"></script> 
+    <script type="text/javascript" src="/jqwidgets/jqxdata.export.js"></script> 
+    <script type="text/javascript" src="/jqwidgets/jqxgrid.export.js"></script> 
+    <script type="text/javascript" src="/jqwidgets/jqxgrid.columnsresize.js"></script>
+    <script type="text/javascript" src="/jqwidgets/jqxcalendar.js"></script>
+    <script type="text/javascript" src="/jqwidgets/jqxdatetimeinput.js"></script>
+    <script type="text/javascript" src="/jqwidgets/jqxwindow.js"></script>
+</head>
+<body>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            var theme = 'energyblue'
+            $("#newUser").jqxWindow({
+                width: 500, height: 320, resizable: false, isModal: true, autoOpen: false, cancelButton: $("#Cancel"), modalOpacity: 0.01, theme: theme
+            });
+            $("#newUser").jqxWindow('hide');
+            $("#newUser").on('open', function () {
+                $("#UserName").jqxInput('selectAll');
+            });
+
+            $('#UserName').jqxInput({ width: '200px', height: '20px', theme: theme, width: "100%" })
+            $('#Email').jqxInput({ width: '200px', height: '20px', theme: theme, width: "100%" })
+            $('#FirstName').jqxInput({ width: '200px', height: '20px', theme: theme, width: "100%" })
+            $('#LastName').jqxInput({ width: '200px', height: '20px', theme: theme, width: "100%" })
+            $('#Phone').jqxInput({ width: '200px', height: '20px', theme: theme, width: "100%" })
+            $('#Password').jqxPasswordInput({ width: '200px', height: '20px', showStrength: false, showStrengthPosition: 'right', theme: theme, width: "100%" })
+            $("#RoleName").jqxComboBox({ source: ['Super Admin', 'Admin', 'Analyst', 'Guest'], selectedIndex: 4, height: '20px', width: '100%' })
+            $("#Cancel").jqxButton({ theme: theme })
+            $("#Save").jqxButton({ theme: theme })
+
+            $('#newUser').jqxValidator({
+                rules: [
+                    { input: '#UserName', message: 'Required field', action: 'keyup, blur', rule: 'required' },
+                    { input: '#Email', message: 'Required field', action: 'keyup, blur', rule: 'required' },
+                    { input: '#FirstName', message: 'Required field', action: 'keyup, blur', rule: 'required' },
+                    { input: '#LastName', message: 'Required field', action: 'keyup, blur', rule: 'required' },
+                    { input: '#Password', message: 'Required field', action: 'keyup, blur', rule: 'required' },
+                ], hintType: 'label'
+            });
+            $('#newUser').on('validationSuccess', function (event) {
+                createNewUser()
+            });
+            $('#Save').click(function () {
+                $('#newUser').jqxValidator('validate')
+            });
+            $('#Cancel').click(function () {
+                $("#newUser").jqxWindow('close')
+            })
+
+            var source =
+            {
+                dataType: "json",
+                dataFields: [
+                    { name: 'Id', type: 'string' },
+                    { name: 'UserName', type: 'string' },
+                    { name: 'Email', type: 'string' },
+                    { name: 'Phone', type: 'string' },
+                    { name: 'FirstName', type: 'string' },
+                    { name: 'LastName', type: 'string' },
+                    { name: 'Disabled', type: 'bool' },
+                    { name: 'LastSignOn', type: 'date' },
+                    { name: 'RoleName', type: 'string' }
+                ],
+                id: 'Id',
+                url: '/admin/userlist'
+            };
+
+            var dataAdapter = new $.jqx.dataAdapter(source, {
+                downloadComplete: function (data, status, xhr) { },
+                loadComplete: function (data) { },
+                loadError: function (xhr, status, error) { }
+            });
+
+            $("#jqxgrid").jqxGrid({
+                width: '100%',
+                theme: theme,
+                source: dataAdapter,
+                pageable: false,
+                autoheight: true,
+                sortable: true,
+                altrows: true,
+                enabletooltips: true,
+                editable: true,
+                showfilterrow: true,
+                filterable: true,
+                columnsresize: true,
+                selectionmode: 'singlerow', // must be singlerow for delete to work, at least the way it's implemented.
+                editmode: 'click',
+                columns: [
+                    { text: 'User Name', datafield: 'UserName', width: '10%', align: 'center' },
+                    {
+                        text: 'Role', datafield: 'RoleName', width: '10%', align: 'center',
+                        columntype: 'dropdownlist',
+                        createeditor: function (row, cellvalue, editor) {
+                            editor.jqxDropDownList({ source: ['Super Admin', 'BMBFA Admin', 'Center Admin', 'Analyst', 'Guest'] })
+                        },
+                    },
+                    { text: 'Last Sign On', datafield: 'LastSignOn', columntype: 'datetime', width: '15%', cellsformat: 'MM/dd/yyyy hh:mm tt', align: 'center', editable: false, filtertype: 'range' },
+                    { text: 'Disabled', datafield: 'Disabled', columntype: 'checkbox', width: '10%', align: 'center', filtertype: 'bool' },
+                    { text: 'First Name', datafield: 'FirstName', width: '15%', columngroup: 'Name', align: 'center' },
+                    { text: 'Last Name', datafield: 'LastName', width: '15%', columngroup: 'Name', align: 'center' },
+                    { text: 'Email', datafield: 'Email', width: '15%', columngroup: 'Contact', align: 'center' },
+                    { text: 'Phone', datafield: 'Phone', width: '10%', columngroup: 'Contact', align: 'center' }
+                ],
+                columngroups: [
+                    { text: 'Name', name: 'Name', align: 'center' },
+                    { text: 'Contact', name: 'Contact', align: 'center' }
+                ]
+            });
+
+            // $("#jqxgrid").jqxGrid('setcolumnproperty', 'LastSignOn', 'editable', false)
+
+            $("#addRecord").jqxButton();
+            $("#deleteRecord").jqxButton();
+
+            $("#excelExport").jqxButton();
+            $("#xmlExport").jqxButton();
+            $("#csvExport").jqxButton();
+            $("#htmlExport").jqxButton();
+            $("#pdfExport").jqxButton();
+            $("#excelExport").click(function () { $("#jqxgrid").jqxGrid('exportdata', 'xls', 'jqxGrid'); });
+            $("#xmlExport").click(function () { $("#jqxgrid").jqxGrid('exportdata', 'xml', 'jqxGrid'); });
+            $("#csvExport").click(function () { $("#jqxgrid").jqxGrid('exportdata', 'csv', 'jqxGrid'); });
+            $("#htmlExport").click(function () { $("#jqxgrid").jqxGrid('exportdata', 'html', 'jqxGrid'); });
+            $("#pdfExport").click(function () { $("#jqxgrid").jqxGrid('exportdata', 'pdf', 'jqxGrid'); });
+
+            $("#addRecord").click(function () {
+                $("#newUser").jqxWindow('open');
+            })
+
+            $("#deleteRecord").click(function () {
+                var selectedrowindex = $("#jqxgrid").jqxGrid('getselectedrowindex');
+                var rowscount = $("#jqxgrid").jqxGrid('getdatainformation').rowscount;
+                if (selectedrowindex >= 0 && selectedrowindex < rowscount) {
+                    var id = $("#jqxgrid").jqxGrid('getrowid', selectedrowindex);
+                    var commit = function () { $("#jqxgrid").jqxGrid('deleterow', id) }
+                    deleteRecordOnServer(id, commit)
+                }
+            });
+
+            $("#jqxgrid").on('cellendedit', function (event) {
+                var args = event.args
+                var dataField = args.datafield;
+                var value = args.value
+                var oldValue = args.oldvalue;
+                // for checkboxes, rowdata doesn't exist, so we use this approach instead to get the row id.
+                // Odd that we don't need to explicitly state the row id datafield.
+                var id = $("#jqxgrid").jqxGrid('getrowid', args.rowindex);
+
+                if (oldValue != value) {
+                    updateFieldOnServer(id, dataField, value)
+                }
+            })
+
+            function deleteRecordOnServer(id, commit) {
+                $.ajax({
+                    url: '/admin/deleteuser',
+                    async: true,
+                    cache: false,
+                    type: "post",
+                    data: { id: id },
+                    success: function (data) {
+                        if (data != "OK") {
+                            alert("A problem occurred trying to delete the record: " + data);
+                        }
+                        else {
+                            commit();
+                        }
+                    },
+                    fail: function (data) {
+                        alert("A problem occurred trying to delete the record.");
+                    }
+                });
+            }
+
+            function updateFieldOnServer(id, field, value) {
+                dict = {}
+                dict['id'] = id
+                dict[field] = value
+                $.ajax({
+                    url: '/admin/updateuser',
+                    async: true,
+                    cache: false,
+                    type: "post",
+                    data: dict,
+                    success: function (data) {
+                        if (data != "OK") {
+                            alert("A problem occurred trying to update the record.");
+                        }
+                    },
+                    fail: function (data) {
+                        alert("A problem occurred trying to update the record.");
+                    }
+                });
+            }
+
+            function createNewUser() {
+                var datarow = {
+                    UserName: $("#UserName").val(),
+                    Email: $("#Email").val(),
+                    FirstName: $("#FirstName").val(),
+                    LastName: $("#LastName").val(),
+                    Phone: $("#Phone").val(),
+                    Password: $("#Password").val(),
+                    RoleName: $("#RoleName").val()
+                }
+                $.ajax({
+                    url: '/admin/createuser',
+                    async: true,
+                    cache: false,
+                    type: "post",
+                    data: datarow,
+                    success: function (data) {
+                        datarow["Id"] = data
+                        $("#newUser").jqxWindow('close')
+                        $("#jqxgrid").jqxGrid('addrow', null, datarow);
+                    },
+                    fail: function (data) {
+                        alert("A problem occurred trying to update the record.");
+                    }
+                });
+            }
+        });
+
+    </script>
+    <div>
+        <h1>Manage Users</h1>
+    </div>
+    <div style='margin-top: 20px;'>
+        <input type="button" value="Add User" id='addRecord' />
+        <input type="button" value="Delete Record" id='deleteRecord' style="visibility:hidden" />
+    </div>
+    <div id="jqxgrid"></div>
+    <div style='margin-top: 20px;'>
+        <div style='float: left;'>
+            <input type="button" value="Export to Excel" id='excelExport' />
+            <input type="button" value="Export to XML" id='xmlExport' />
+            <input type="button" value="Export to CSV" id='csvExport' />
+            <input type="button" value="Export to HTML" id='htmlExport' />
+            <input type="button" value="Export to PDF" id='pdfExport' />
+        </div>
+    </div>
+    <div id="newUser">
+        <div>New User</div>
+        <div style="overflow: hidden;">
+            <input name='csrf' type='hidden' value='cb8ba06f-b758-45ea-a1fd-77ca74f03356' id='__csrf__'/>
+            <div class='row rowlabel' style='width:100%;'>
+                <div class='col-sm-4 padding-top4'>User Name:</div>
+                <div class='col-sm-6'><input style='padding-left:3px' id='UserName'/></div>
+            </div>
+            <div class='row rowlabel' style='width:100%;'>
+                <div class='col-sm-4 padding-top4'>Role:</div>
+                <div class='col-sm-6' >
+                    <div id="RoleName"></div>  <!-- OI! All we need is a div with the ID! -->
+                </div>
+            </div>
+            <div class='row rowlabel' style='width:100%;'>
+                <div class='col-sm-4 padding-top4'>Email:</div>
+                <div class='col-sm-6'><input style='padding-left:3px' id='Email'/></div>
+            </div>
+            <div class='row rowlabel' style='width:100%;'>
+                <div class='col-sm-4 padding-top4'>First Name:</div>
+                <div class='col-sm-6'><input style='padding-left:3px' id='FirstName'/></div>
+            </div>
+            <div class='row rowlabel' style='width:100%;'>
+                <div class='col-sm-4 padding-top4'>Last Name:</div>
+                <div class='col-sm-6'><input style='padding-left:3px' id='LastName'/></div>
+            </div>
+            <div class='row rowlabel' style='width:100%;'>
+                <div class='col-sm-4 padding-top4'>Phone:</div>
+                <div class='col-sm-6'><input style='padding-left:3px' id='Phone'/></div>
+            </div>
+            <div class='row rowlabel' style='width:100%;'>
+                <div class='col-sm-4 padding-top4'>Password:</div>
+                <div class='col-sm-6'><input style='padding-left:3px' id='Password' type='password'/></div>
+            </div>
+            <div class='row rowlabel' style='width:100%;'>
+                <div class='col-sm-12 padding-top4 center-text'>
+                    <input type="button" id="Save" value="Save"/>
+                    <input type="button" id="Cancel" value="Cancel"/>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
