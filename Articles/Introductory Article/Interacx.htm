@@ -92,8 +92,9 @@ populate the grid:</p>
 {
   dataType: &quot;json&quot;,
   dataFields: [
-    { name: 'Id', type: 'string' },
+    { name: 'Id', type: 'integer' },
     { name: 'UserName', type: 'string' },
+    { name: 'RoleName', type: 'string' },
     { name: 'Email', type: 'string' },
     { name: 'Phone', type: 'string' },
     { name: 'FirstName', type: 'string' },
@@ -117,7 +118,8 @@ ahead.&nbsp; But don't forget, I had to type all this stuff in!</p>
       editor.jqxDropDownList({ source: ['Super Admin', 'BMBFA Admin', 'Center Admin', 'Analyst', 'Guest'] })
     },
   },
-  { text: 'Last Sign On', datafield: 'LastSignOn', columntype: 'datetime', width: '15%', cellsformat: 'MM/dd/yyyy hh:mm tt', align: 'center', editable: false, filtertype: 'range' },
+  { text: 'Last Sign On', datafield: 'LastSignOn', columntype: 'datetime', width: '15%', cellsformat: 'MM/dd/yyyy hh:mm tt', 
+      align: 'center', editable: false, filtertype: 'range' },
   { text: 'Disabled', datafield: 'Disabled', columntype: 'checkbox', width: '10%', align: 'center', filtertype: 'bool' },
   { text: 'First Name', datafield: 'FirstName', width: '15%', columngroup: 'Name', align: 'center' },
   { text: 'Last Name', datafield: 'LastName', width: '15%', columngroup: 'Name', align: 'center' },
@@ -197,29 +199,154 @@ typing would be unnecessary if we were smart about how we did things and used a
 view schema</b>--metadata if you will.&nbsp; <b>Furthermore, don't forget that 
 this view schema will also be used to generate the SQL for the CRUD operations</b> 
 -- we're also eliminating redundancy on the server-side as well!</p>
+<h3>Fixing Control Initialization</h3>
 <p>Let's start correcting this problem by defining some JSON for initializing 
 the &quot;new user&quot; controls.&nbsp; The first thing we need is an array of fields and 
 at a minimum, some indication as to how to render the field:</p>
-<pre>{&quot;fields&quot;: [
-  {&quot;name&quot;: &quot;Id&quot;},
-  {&quot;name&quot;: &quot;UserName&quot;, &quot;render&quot;: &quot;input&quot;},
-  {&quot;name&quot;: &quot;RoleName&quot;, &quot;render&quot;: &quot;lookup&quot;, &quot;lookupdata&quot;:
-    [
-      {&quot;value&quot;: &quot;Super Admin&quot;},
-      {&quot;value&quot;: &quot;Admin&quot;},
-      {&quot;value&quot;: &quot;Analyst&quot;},
-      {&quot;value&quot;: &quot;Guest&quot;}
-    ]},
-  {&quot;name&quot;: &quot;Password&quot;, &quot;render&quot;: &quot;password&quot;},
-  {&quot;name&quot;: &quot;Email&quot;, &quot;render&quot;: &quot;input&quot;},
-  {&quot;name&quot;: &quot;FirstName&quot;, &quot;render&quot;: &quot;input&quot;},
-  {&quot;name&quot;: &quot;LastName&quot;, &quot;render&quot;: &quot;input&quot;},
-  {&quot;name&quot;: &quot;Disabled&quot;, &quot;render&quot;: &quot;checkbox&quot;},
-  {&quot;name&quot;: &quot;LastSignOn&quot;, &quot;render&quot;: &quot;datetime&quot;}
-]}</pre>
+<pre>var view = '{&quot;fields&quot;: ['+
+  '{&quot;name&quot;: &quot;Id&quot;},'+
+  '{&quot;name&quot;: &quot;UserName&quot;, &quot;render&quot;: &quot;input&quot;},'+
+  '{&quot;name&quot;: &quot;RoleName&quot;, &quot;render&quot;: &quot;lookup&quot;, &quot;initialselection&quot;: 3, &quot;lookupdata&quot;:'+
+  '['+
+    '{&quot;value&quot;: &quot;Super Admin&quot;},'+
+    '{&quot;value&quot;: &quot;Admin&quot;},'+
+    '{&quot;value&quot;: &quot;Analyst&quot;},'+
+    '{&quot;value&quot;: &quot;Guest&quot;}'+
+    ']},'+
+  '{&quot;name&quot;: &quot;Password&quot;, &quot;render&quot;: &quot;password&quot;},'+
+  '{&quot;name&quot;: &quot;Email&quot;, &quot;render&quot;: &quot;input&quot;},'+
+  '{&quot;name&quot;: &quot;FirstName&quot;, &quot;render&quot;: &quot;input&quot;},'+
+  '{&quot;name&quot;: &quot;LastName&quot;, &quot;render&quot;: &quot;input&quot;},'+
+  '{&quot;name&quot;: &quot;Phone&quot;, &quot;render&quot;: &quot;input&quot;},' +
+  '{&quot;name&quot;: &quot;Disabled&quot;},'+
+  '{&quot;name&quot;: &quot;LastSignOn&quot;}' +
+']}'
+var json = JSON.parse(view)</pre>
+<p>Instead of the manual initialization of the controls, we'll now initialize 
+controls which define a &quot;render&quot; key:</p>
+<pre>function ixBindControls(view, theme) {
+  var fields = view.fields
+  for (var i = 0; i &lt; fields.length; i++) {
+    var field = fields[i]
+    var fieldId = &quot;#&quot; + field.name
+    var element = $(fieldId)
+
+    switch (field.render) {
+      case &quot;input&quot;:
+        element.jqxInput({ width: '200px', height: '20px', theme: theme, width: &quot;100%&quot; })
+        break
+      case &quot;lookup&quot;:
+        element.jqxComboBox({ source: field.lookupdata, selectedIndex: field.initialselection, height: '20px', width: '100%' })
+        break
+      case &quot;password&quot;:
+        element.jqxPasswordInput({ height: '20px', showStrength: false, showStrengthPosition: 'right', theme: theme, width: &quot;100%&quot; })
+        break;
+      case &quot;checkbox&quot;:
+        element.jqxCheckBox({ theme: theme })
+        break
+      case &quot;datetime&quot;:
+        element.jqxDateTime({theme: theme})
+        break;
+    }
+  }
+}</pre>
+<p>For the moment, let's ignore various hardcoded options like width and height 
+and just focus on the concept of a view schema eliminating redundancy.&nbsp; We 
+replace all the hardcoded control initialization with:</p>
+<pre>ixBindControls(json, theme)</pre>
+<h3>Fixing Rule Initialization</h3>
+<p>Rules can get really complicated, but let's say that the main concern at the 
+moment is the &quot;field required&quot; rule.&nbsp; Again, we'll take the code shown 
+earlier:</p>
+<pre>$('#newUser').jqxValidator({
+  rules: [
+    { input: '#UserName', message: 'Required field', action: 'keyup, blur', rule: 'required' },
+    { input: '#Email', message: 'Required field', action: 'keyup, blur', rule: 'required' },
+    { input: '#FirstName', message: 'Required field', action: 'keyup, blur', rule: 'required' },
+    { input: '#LastName', message: 'Required field', action: 'keyup, blur', rule: 'required' },
+    { input: '#Password', message: 'Required field', action: 'keyup, blur', rule: 'required' },
+    ], hintType: 'label'
+});</pre>
+
+<p>We'll add an optional &quot;required&quot; key to the view definition:</p>
+<pre>var view = '{&quot;fields&quot;: ['+
+  '{&quot;name&quot;: &quot;Id&quot;},'+
+  '{&quot;name&quot;: &quot;UserName&quot;, &quot;render&quot;: &quot;input&quot;, &quot;required&quot;: true},'+
+  '{&quot;name&quot;: &quot;RoleName&quot;, &quot;render&quot;: &quot;lookup&quot;, &quot;initialselection&quot;: 3, &quot;lookupdata&quot;:'+
+  '['+
+    '{&quot;value&quot;: &quot;Super Admin&quot;},'+
+    '{&quot;value&quot;: &quot;Admin&quot;},'+
+    '{&quot;value&quot;: &quot;Analyst&quot;},'+
+    '{&quot;value&quot;: &quot;Guest&quot;}'+
+    ']},'+
+  '{&quot;name&quot;: &quot;Password&quot;, &quot;render&quot;: &quot;password&quot;, &quot;required&quot;: true},'+
+  '{&quot;name&quot;: &quot;Email&quot;, &quot;render&quot;: &quot;input&quot;, &quot;required&quot;: true},'+
+  '{&quot;name&quot;: &quot;FirstName&quot;, &quot;render&quot;: &quot;input&quot;, &quot;required&quot;: true},'+
+  '{&quot;name&quot;: &quot;LastName&quot;, &quot;render&quot;: &quot;input&quot;, &quot;required&quot;: true},'+
+  '{&quot;name&quot;: &quot;Phone&quot;, &quot;render&quot;: &quot;input&quot;, &quot;required&quot;: true},' +
+  '{&quot;name&quot;: &quot;Disabled&quot;},'+
+  '{&quot;name&quot;: &quot;LastSignOn&quot;}' +
+']}'
+<p>And write a function to initialize the rules:</p>
 <p>&nbsp;</p>
-<p>&nbsp;</p>
-<p>&nbsp;</p>
+<p></p>
+<p>We replace the above with:</p>
+<pre>$('#newUser').jqxValidator({rules: ixGetRules(json), hintType: 'label'});</pre>
+<h3>Fixing DataSource Initialization</h3>
+<p>Earlier, we saw this:</p>
+<pre>dataFields: [
+  { name: 'Id', type: 'integer' },
+  { name: 'UserName', type: 'string' },
+  { name: 'RoleName', type: 'string' },
+  { name: 'Email', type: 'string' },
+  { name: 'Phone', type: 'string' },
+  { name: 'FirstName', type: 'string' },
+  { name: 'LastName', type: 'string' },
+  { name: 'Disabled', type: 'bool' },
+  { name: 'LastSignOn', type: 'date' },
+  { name: 'RoleName', type: 'string' }
+],</pre>
+<p>We will now add field type information to our view:</p>
+<pre>var view = '{&quot;fields&quot;: ['+
+  '{&quot;name&quot;: &quot;Id&quot;, &quot;type&quot;: &quot;integer&quot;},'+
+  '{&quot;name&quot;: &quot;UserName&quot;, &quot;type&quot;: &quot;string&quot;, &quot;render&quot;: &quot;input&quot;, &quot;required&quot;: true},' +
+  '{&quot;name&quot;: &quot;RoleName&quot;, &quot;type&quot;: &quot;string&quot;, &quot;render&quot;: &quot;lookup&quot;, &quot;initialselection&quot;: 3, &quot;lookupdata&quot;:' +
+  '['+
+    '{&quot;value&quot;: &quot;Super Admin&quot;},'+
+    '{&quot;value&quot;: &quot;Admin&quot;},'+
+    '{&quot;value&quot;: &quot;Analyst&quot;},'+
+    '{&quot;value&quot;: &quot;Guest&quot;}'+
+    ']},'+
+  '{&quot;name&quot;: &quot;Password&quot;, &quot;type&quot;: &quot;string&quot;, &quot;render&quot;: &quot;password&quot;, &quot;required&quot;: true},' +
+  '{&quot;name&quot;: &quot;Email&quot;, &quot;type&quot;: &quot;string&quot;, &quot;render&quot;: &quot;input&quot;, &quot;required&quot;: true},' +
+  '{&quot;name&quot;: &quot;FirstName&quot;, &quot;type&quot;: &quot;string&quot;, &quot;render&quot;: &quot;input&quot;, &quot;required&quot;: true},' +
+  '{&quot;name&quot;: &quot;LastName&quot;, &quot;type&quot;: &quot;string&quot;, &quot;render&quot;: &quot;input&quot;, &quot;required&quot;: true},' +
+  '{&quot;name&quot;: &quot;Phone&quot;, &quot;type&quot;: &quot;string&quot;, &quot;render&quot;: &quot;input&quot;, &quot;required&quot;: true},' +
+  '{&quot;name&quot;: &quot;Disabled&quot;, &quot;type&quot;: &quot;bool&quot;},' +
+  '{&quot;name&quot;: &quot;LastSignOn&quot;, &quot;type&quot;: &quot;date&quot;}' +
+']}'</pre>
+<p>We'll need a function to build the data source array:</p>
+<pre>function ixGetDataFields(view) {
+  var fields = view.fields
+  var datafields = []
+
+  for (var i = 0; i &lt; fields.length; i++) {
+    var field = fields[i]
+    var datafield = { name: field.name, type: field.type }
+    datafields.push(datafield)
+  }
+
+  return datafields
+}</pre>
+<p>And we can replace the initialization of the data fields with:</p>
+<pre>var source =
+{
+  dataType: &quot;json&quot;,
+  dataFields: ixGetDataFields(json),
+  id: 'Id',
+  url: '/admin/userlist'
+};</pre>
+<h3>Fixing Column Definitions</h3>
 <p>&nbsp;</p>
 <p>&nbsp;</p>
 <p>&nbsp;</p>
