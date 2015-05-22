@@ -347,8 +347,47 @@ earlier:</p>
   url: '/admin/userlist'
 };</pre>
 <h3>Fixing Column Definitions</h3>
+<p>Let's look again at the hand-coded column definitions for the grid:</p>
+<pre>columns: [
+  { text: 'User Name', datafield: 'UserName', width: '10%', align: 'center' },
+  { text: 'Role', datafield: 'RoleName', width: '10%', align: 'center',
+    columntype: 'dropdownlist',
+    createeditor: function (row, cellvalue, editor) {
+      editor.jqxDropDownList({ source: ['Super Admin', 'BMBFA Admin', 'Center Admin', 'Analyst', 'Guest'] })
+    },
+  },
+  { text: 'Last Sign On', datafield: 'LastSignOn', columntype: 'datetime', width: '15%', cellsformat: 'MM/dd/yyyy hh:mm tt', 
+      align: 'center', editable: false, filtertype: 'range' },
+  { text: 'Disabled', datafield: 'Disabled', columntype: 'checkbox', width: '10%', align: 'center', filtertype: 'bool' },
+  { text: 'First Name', datafield: 'FirstName', width: '15%', columngroup: 'Name', align: 'center' },
+  { text: 'Last Name', datafield: 'LastName', width: '15%', columngroup: 'Name', align: 'center' },
+  { text: 'Email', datafield: 'Email', width: '15%', columngroup: 'Contact', align: 'center' },
+  { text: 'Phone', datafield: 'Phone', width: '10%', columngroup: 'Contact', align: 'center' }
+],
+columngroups: [
+  { text: 'Name', name: 'Name', align: 'center' },
+  { text: 'Contact', name: 'Contact', align: 'center' }
+]</pre>
+<p>We can see that we'll need the following fields in the view schema:</p>
+<ul>
+	<li>caption</li>
+	<li>format</li>
+	<li>filter type</li>
+	<li>group</li>
+	<li>width</li>
+	<li>alignment</li>
+	<li>readonly</li>
+	<li>visible (may be hidden on the grid but visible in the &quot;new record&quot; form, 
+	or vice-versa!)</li>
+</ul>
+<p>We also need to consider the ordering of the columns for the grid, which may 
+be different than the ordering of the columns for a &quot;new record&quot; form.</p>
+<p>So let's fuss with the JSON view again, putting some of these fields into a 
+&quot;grid&quot; subsection:</p>
 <p>&nbsp;</p>
-<p>&nbsp;</p>
+<p>While the JSON starts to look daunting, keep in mind that most of it will be 
+auto-generated on the server-side from the database schema and metadata attached 
+to the schema along with a variety of default behaviors.</p>
 <p>&nbsp;</p>
 <p>&nbsp;</p>
 <p>&nbsp;</p>
