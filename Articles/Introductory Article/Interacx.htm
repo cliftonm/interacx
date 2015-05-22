@@ -381,16 +381,242 @@ columngroups: [
 	or vice-versa!)</li>
 </ul>
 <p>We also need to consider the ordering of the columns for the grid, which may 
-be different than the ordering of the columns for a &quot;new record&quot; form.</p>
-<p>So let's fuss with the JSON view again, putting some of these fields into a 
-&quot;grid&quot; subsection:</p>
-<p>&nbsp;</p>
-<p>While the JSON starts to look daunting, keep in mind that most of it will be 
-auto-generated on the server-side from the database schema and metadata attached 
-to the schema along with a variety of default behaviors.</p>
-<p>&nbsp;</p>
-<p>&nbsp;</p>
-<p>&nbsp;</p>
+be different than the ordering of the columns for a &quot;new record&quot; form.&nbsp; 
+The jqxGrid control orders the columns in the same order in which they are 
+defined -- there is no separate column order attributes.&nbsp; </p>
+<p>We'll first fuss with the JSON view again, putting these fields as 
+appropriate into a &quot;grid&quot; subsection of each field:</p>
+<pre>var view = '{&quot;fields&quot;: [' +
+  '{&quot;name&quot;: &quot;Id&quot;, &quot;type&quot;: &quot;integer&quot;},' +
+  '{&quot;name&quot;: &quot;UserName&quot;, &quot;readonly&quot;:false, &quot;type&quot;: &quot;string&quot;, &quot;render&quot;: &quot;input&quot;, &quot;required&quot;: true, &quot;caption&quot;: &quot;User Name&quot;, ' +
+    '&quot;grid&quot;:{&quot;width&quot;:&quot;10%&quot;, &quot;align&quot;:&quot;center&quot;, &quot;order&quot;: 0}' +
+  '},' +
+  '{&quot;name&quot;: &quot;LastSignOn&quot;, &quot;caption&quot;:&quot;Last Sign On&quot;, &quot;readonly&quot;:true, &quot;type&quot;: &quot;date&quot;, &quot;render&quot;:&quot;datetime&quot;, ' +
+    '&quot;grid&quot;:{&quot;width&quot;:&quot;15%&quot;, &quot;align&quot;:&quot;center&quot;, &quot;format&quot;: &quot;MM/dd/yyyy hh:mm tt&quot;, &quot;order&quot;: 1}' +
+  '},' +
+  '{&quot;name&quot;: &quot;RoleName&quot;, &quot;readonly&quot;:false, &quot;type&quot;: &quot;string&quot;, &quot;render&quot;: &quot;lookup&quot;, &quot;caption&quot;: &quot;Role&quot;, &quot;initialselection&quot;: 3, &quot;lookupdata&quot;:' +
+    '[' +
+      '{&quot;value&quot;: &quot;Super Admin&quot;},' +
+      '{&quot;value&quot;: &quot;Admin&quot;},' +
+      '{&quot;value&quot;: &quot;Analyst&quot;},' +
+      '{&quot;value&quot;: &quot;Guest&quot;}' +
+    '], ' +
+    '&quot;grid&quot;:{&quot;width&quot;:&quot;10%&quot;, &quot;align&quot;:&quot;center&quot;, &quot;order&quot;: 2}' +
+  '},' +
+  '{&quot;name&quot;: &quot;Password&quot;, &quot;caption&quot;:&quot;Password&quot;, &quot;readonly&quot;:false, &quot;type&quot;: &quot;string&quot;, &quot;render&quot;: &quot;password&quot;, &quot;required&quot;: true, ' +
+    '&quot;grid&quot;:{&quot;visible&quot;:false}' +
+  '},' +
+  '{&quot;name&quot;: &quot;Disabled&quot;, &quot;render&quot;:&quot;checkbox&quot;, &quot;caption&quot;:&quot;Disabled?&quot;, &quot;readonly&quot;:false, &quot;type&quot;: &quot;bool&quot;,' +
+    '&quot;grid&quot;:{&quot;width&quot;:&quot;10%&quot;, &quot;align&quot;:&quot;center&quot;, &quot;order&quot;: 3}' +
+  '},' +
+  '{&quot;name&quot;: &quot;FirstName&quot;, &quot;caption&quot;: &quot;First Name&quot;, &quot;readonly&quot;:false, &quot;type&quot;: &quot;string&quot;, &quot;render&quot;: &quot;input&quot;, &quot;required&quot;: true,' +
+    '&quot;grid&quot;:{&quot;width&quot;:&quot;15%&quot;, &quot;align&quot;:&quot;center&quot;, &quot;columngroup&quot;:&quot;Name&quot;, &quot;order&quot;: 4}' +
+  '},' +
+  '{&quot;name&quot;: &quot;LastName&quot;, &quot;caption&quot;:&quot;Last Name&quot;, &quot;readonly&quot;:false, &quot;type&quot;: &quot;string&quot;, &quot;render&quot;: &quot;input&quot;, &quot;required&quot;: true,' +
+    '&quot;grid&quot;:{&quot;width&quot;:&quot;15%&quot;, &quot;align&quot;:&quot;center&quot;, &quot;columngroup&quot;:&quot;Name&quot;, &quot;order&quot;: 5}' +
+  '},' +
+  '{&quot;name&quot;: &quot;Phone&quot;, &quot;caption&quot;:&quot;Phone&quot;, &quot;readonly&quot;:false, &quot;type&quot;: &quot;string&quot;, &quot;render&quot;: &quot;input&quot;, &quot;required&quot;: true,' +
+    '&quot;grid&quot;:{&quot;width&quot;:&quot;10%&quot;, &quot;align&quot;:&quot;center&quot;, &quot;columngroup&quot;:&quot;Contact&quot;, &quot;order&quot;: 6}' +
+  '},' +
+  '{&quot;name&quot;: &quot;Email&quot;, &quot;caption&quot;: &quot;Email&quot;, &quot;readonly&quot;:false, &quot;type&quot;: &quot;string&quot;, &quot;render&quot;: &quot;input&quot;, &quot;required&quot;: true,' +
+    '&quot;grid&quot;:{&quot;width&quot;:&quot;15%&quot;, &quot;align&quot;:&quot;center&quot;, &quot;columngroup&quot;:&quot;Contact&quot;, &quot;order&quot;: 7}' +
+  '}' +
+']}'</pre>
+<p>While the JSON starts to look mind-numbing and daunting, keep in mind that 
+most of it will be auto-generated on the server-side from the database schema 
+and metadata attached to the schema along with a variety of default behaviors, 
+and ultimately, we'll have a <i>web page</i> just for managing view schema 
+properties!</p>
+<p>We also implement a few Javascript functions to automate generating the 
+jqxGrid column definition.&nbsp; The Javascript I'm putting together is not the 
+most elegant and should, for all practical purposes be considered prototype 
+code!&nbsp; However, it gets the job done for now and illustrates the point I'm 
+trying to make in this article:</p>
+<pre>function ixGetColumnDefinitions(view) {
+  var fields = sortGridColumns(view)
+  var columns = []
+
+  for (var i = 0; i &lt; fields.length; i++) {
+    var field = fields[i]
+
+    if (field.grid !== undefined) {
+      // Undefined visibility assumes visible.
+      var visible = (field.grid.visible === undefined) ? true : field.grid.visible
+
+      if (visible) {
+        switch (field.render) {
+          case &quot;input&quot;:
+          case &quot;password&quot;:
+            var column = {
+            text: field.caption,
+            datafield: field.name,
+            width: field.grid.width,
+            align: field.grid.align,
+            editable: !field.readonly,
+            columngroup: field.grid.columngroup
+          }
+          columns.push(column)
+          break
+        case &quot;lookup&quot;:
+            var items = field.lookupdata.map(function (elem) {
+              return elem.value
+            })
+  
+          var column = {
+            text: field.caption,
+            datafield: field.name,
+            width: field.grid.width,
+            align: field.grid.align,
+            editable: !field.readonly,
+            columngroup: field.grid.columngroup,
+            columntype: 'dropdownlist',
+            createeditor: function (row, cellvalue, editor) {
+              editor.jqxDropDownList({ source: items })
+            },
+          }
+          columns.push(column)
+          break
+        case &quot;checkbox&quot;:
+          var column = {
+            text: field.caption,
+            datafield: field.name,
+            width: field.grid.width,
+            align: field.grid.align,
+            editable: !field.readonly,
+            columngroup: field.grid.columngroup,
+            filtertype: 'bool',
+            columntype: 'checkbox'
+            }
+          columns.push(column)
+          break
+        case &quot;datetime&quot;:
+          var column = {
+            text: field.caption,
+            datafield: field.name,
+            width: field.grid.width,
+            align: field.grid.align,
+            columngroup: field.grid.columngroup,
+            cellsformat: field.grid.format,
+            editable: !field.readonly,
+            filtertype: 'range',
+            columntype: 'datetime'
+          }
+          columns.push(column)
+          break;
+        default:
+          var column = {
+            text: field.caption,
+            datafield: field.name,
+            width: field.grid.width,
+            align: field.grid.align,
+            editable: !field.readonly,
+            columngroup: field.grid.columngroup
+          }
+          columns.push(column)
+          break
+        }
+      }
+    }
+  }
+
+  return columns
+}
+
+function ixGetColumnGroups(view) {
+  var fields = view.fields
+  var columnGroups = []
+
+  for (var i = 0; i &lt; fields.length; i++) {
+    var field = fields[i]
+
+    if (field.grid !== undefined) {
+    // Undefined visibility assumes visible.
+      var visible = (field.grid.visible === undefined) ? true : field.grid.visible
+
+      if (visible) {
+        if (field.grid.columngroup !== undefined) {
+          columnGroups.push(field.grid.columngroup)
+        }
+      }
+    }
+  }
+
+  var uniqueColumns = columnGroups.filter(unique)
+
+  for (var i = 0; i &lt; uniqueColumns.length; i++) {
+    var columnGroup = {text: uniqueColumns[i], name: uniqueColumns[i], align: 'center'}
+    columnGroups.push(columnGroup)
+  }
+
+  return columnGroups
+}
+
+function unique(value, index, self) {
+  return self.indexOf(value) === index;
+}
+
+function sortGridColumns(view) {
+  var fields = view.fields
+  var columns = []
+
+  for (var i = 0; i &lt; fields.length; i++) {
+    var field = fields[i]
+
+    if (field.grid !== undefined) {
+      // Undefined visibility assumes visible.
+      var visible = (field.grid.visible === undefined) ? true : field.grid.visible
+
+      if (visible) {
+        columns.push({key:field, order:field.grid.order})
+      }
+    }
+  }
+
+  var sortedFields = columns.sort(function (x, y) { return x.order - y.order }).map(function(f) {return f.key})
+
+  return sortedFields
+}          </pre>
+<p>Now, the <code>columns</code> and <code>columngroups</code> properties can be initialized like this:</p>
+<pre>columns: ixGetColumnDefinitions(json),
+columngroups: ixGetColumnGroups(json)
+</pre>
+<h3>Fixing the HTML</h3>
+<p>Let's address the HTML for creating a new record next.&nbsp; What we'll do 
+here is first gather up the fields that are relevant to an input form (we'll add 
+a subsection similar to &quot;grid&quot; but call it &quot;form&quot;) and then use knockout to help 
+us lay out the repetitive elements of the form.</p>
+<h3>Fixing the Create User Callback Data</h3>
+<p>Recall that we are posting back the data from the widgets:</p>
+<pre>var datarow = {
+  UserName: $(&quot;#UserName&quot;).val(),
+  Email: $(&quot;#Email&quot;).val(),
+  FirstName: $(&quot;#FirstName&quot;).val(),
+  LastName: $(&quot;#LastName&quot;).val(),
+  Phone: $(&quot;#Phone&quot;).val(),
+  Password: $(&quot;#Password&quot;).val(),
+  RoleName: $(&quot;#RoleName&quot;).val()
+}</pre>
+<p>Here we're obviously posting back only the visible, writeable fields.&nbsp; 
+We don't need to touch the JSON to handle this, instead we just write a small 
+Javascript function that creates this literal object for us:</p>
+<h2>Let's Review!</h2>
+<p>It would be good to review what we've accomplished so far.</p>
+<h3>One Authority on the Rendering of the Grid and New Record Form</h3>
+<p>While it can look complicated, what we've achieved is taking six separate 
+sections of the HTML page and replacing them with generated data from a single 
+JSON data source.&nbsp; One of the immediate benefits of this approach is that 
+there is now only one place in the code that needs to be touched when we want to 
+change some field specification used by the grid and the new record form.&nbsp; 
+We can add and remove fields, re-order them, and adjust some visual aspects of 
+the grid and new record form such as captions and column spacing and formatting.&nbsp; </p>
+<h3>Reusablity</h3>
+<p>Importantly, because this is schema driven, we now have a re-usable solution 
+for our grids.&nbsp; </p>
+<h3>Reduces Typos and Other Errors</h3>
+<p>Because Javascript is an interpreted language and it is so easy to make 
+mistakes -- a misplaced quote mark or curly brace, a typo in a variable name 
+reference, etc. -- this approach significantly reduces the error prone, fire up 
+the browser debugger, process that we all go through when debugging web pages.</p>
 <p>&nbsp;</p>
 <p>&nbsp;</p>
 <p>&nbsp;</p>
