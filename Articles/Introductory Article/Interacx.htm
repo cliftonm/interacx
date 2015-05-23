@@ -583,8 +583,9 @@ columngroups: ixGetColumnGroups(json)
 <h3>Fixing the HTML</h3>
 <p>Let's address the HTML for creating a new record next.&nbsp; What we'll do 
 here is first gather up the fields that are relevant to an input form (we'll add 
-a subsection similar to &quot;grid&quot; but call it &quot;form&quot;) and then use knockout to help 
-us lay out the repetitive elements of the form.</p>
+a subsection similar to &quot;grid&quot; but call it &quot;form&quot;) and then use underscore's 
+template engine to render the HTML on the client-side, thus allowing us to 
+preserve the control over the styling of the label and input field form. </p>
 <h3>Fixing the Create User Callback Data</h3>
 <p>Recall that we are posting back the data from the widgets:</p>
 <pre>var datarow = {
