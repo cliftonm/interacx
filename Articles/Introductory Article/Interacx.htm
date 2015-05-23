@@ -47,7 +47,14 @@ in this diagram:</p>
 <p align="left">
 We'll begin by looking at the manually created grid and what we need to do to 
 make it respond dynamically to a view schema.</p>
-<h2>Redundancy: Come Join the Dark Side</h2>
+<h3>Technology Stack</h3>
+<p>In this article, I'll be using:</p>
+<ul>
+	<li><a href="https://jquery.com/">jQuery</a></li>
+	<li><a href="https://www.jqwidgets.com/">jqWidgets</a></li>
+	<li><a href="http://underscorejs.org/">underscore</a></li>
+</ul>
+<h2>Redundancy: Come Join the Dark Side!</h2>
 <p><img border="0" src="grid1.png" width="803" height="211"></p>
 <p>Here we have jqxGrid control with a variety of features.&nbsp; Besides the 
 sorting, column grouping, and column sizing configuration options, the above 
@@ -583,9 +590,122 @@ columngroups: ixGetColumnGroups(json)
 <h3>Fixing the HTML</h3>
 <p>Let's address the HTML for creating a new record next.&nbsp; What we'll do 
 here is first gather up the fields that are relevant to an input form (we'll add 
-a subsection similar to &quot;grid&quot; but call it &quot;form&quot;) and then use underscore's 
-template engine to render the HTML on the client-side, thus allowing us to 
-preserve the control over the styling of the label and input field form. </p>
+a subsection similar to &quot;grid&quot; but call it &quot;form&quot;) and then use 
+<a href="http://underscorejs.org/">underscore</a>'s 
+template engine to render the HTML on the client-side, which helps to preserve 
+our control over the styling of the label and input field form.&nbsp; Once more, 
+we will touch the JSON, this time adding a <code>form</code> section (by the 
+way, this should be the last time we fuss with the JSON example):</p>
+<pre>var view = '{&quot;fields&quot;: [' +
+  '{&quot;name&quot;: &quot;Id&quot;, &quot;type&quot;: &quot;integer&quot;},' +
+  '{&quot;name&quot;: &quot;UserName&quot;, &quot;readonly&quot;:false, &quot;type&quot;: &quot;string&quot;, &quot;render&quot;: &quot;input&quot;, &quot;required&quot;: true, &quot;caption&quot;: &quot;User Name&quot;, ' +
+    '&quot;grid&quot;:{&quot;width&quot;:&quot;10%&quot;, &quot;align&quot;:&quot;center&quot;, &quot;order&quot;: 0},' +
+    '&quot;form&quot;:{&quot;order&quot;: 0}' +
+  '},' +
+  '{&quot;name&quot;: &quot;LastSignOn&quot;, &quot;caption&quot;:&quot;Last Sign On&quot;, &quot;readonly&quot;:true, &quot;type&quot;: &quot;date&quot;, &quot;render&quot;:&quot;datetime&quot;, ' +
+    '&quot;grid&quot;:{&quot;width&quot;:&quot;15%&quot;, &quot;align&quot;:&quot;center&quot;, &quot;format&quot;: &quot;MM/dd/yyyy hh:mm tt&quot;, &quot;order&quot;: 1}' +
+  '},' +
+  '{&quot;name&quot;: &quot;RoleName&quot;, &quot;readonly&quot;:false, &quot;type&quot;: &quot;string&quot;, &quot;render&quot;: &quot;lookup&quot;, &quot;caption&quot;: &quot;Role&quot;, &quot;initialselection&quot;: 3, &quot;lookupdata&quot;:' +
+    '[' +
+      '{&quot;value&quot;: &quot;Super Admin&quot;},' +
+      '{&quot;value&quot;: &quot;Admin&quot;},' +
+      '{&quot;value&quot;: &quot;Analyst&quot;},' +
+      '{&quot;value&quot;: &quot;Guest&quot;}' +
+    '], ' +
+    '&quot;grid&quot;:{&quot;width&quot;:&quot;10%&quot;, &quot;align&quot;:&quot;center&quot;, &quot;order&quot;: 2},' +
+    '&quot;form&quot;:{&quot;order&quot;: 2}' +
+  '},' +
+  '{&quot;name&quot;: &quot;Password&quot;, &quot;caption&quot;:&quot;Password&quot;, &quot;readonly&quot;:false, &quot;type&quot;: &quot;string&quot;, &quot;render&quot;: &quot;password&quot;, &quot;required&quot;: true, ' +
+    '&quot;grid&quot;:{&quot;visible&quot;:false},' +
+    '&quot;form&quot;:{&quot;order&quot;: 1}' +
+  '},' +
+  '{&quot;name&quot;: &quot;Disabled&quot;, &quot;render&quot;:&quot;checkbox&quot;, &quot;caption&quot;:&quot;Disabled?&quot;, &quot;readonly&quot;:false, &quot;type&quot;: &quot;bool&quot;,' +
+    '&quot;grid&quot;:{&quot;width&quot;:&quot;10%&quot;, &quot;align&quot;:&quot;center&quot;, &quot;order&quot;: 3}' +
+  '},' +
+  '{&quot;name&quot;: &quot;FirstName&quot;, &quot;caption&quot;: &quot;First Name&quot;, &quot;readonly&quot;:false, &quot;type&quot;: &quot;string&quot;, &quot;render&quot;: &quot;input&quot;, &quot;required&quot;: true,' +
+    '&quot;grid&quot;:{&quot;width&quot;:&quot;15%&quot;, &quot;align&quot;:&quot;center&quot;, &quot;columngroup&quot;:&quot;Name&quot;, &quot;order&quot;: 4},' +
+    '&quot;form&quot;:{&quot;order&quot;: 3}' +
+  '},' +
+  '{&quot;name&quot;: &quot;LastName&quot;, &quot;caption&quot;:&quot;Last Name&quot;, &quot;readonly&quot;:false, &quot;type&quot;: &quot;string&quot;, &quot;render&quot;: &quot;input&quot;, &quot;required&quot;: true,' +
+    '&quot;grid&quot;:{&quot;width&quot;:&quot;15%&quot;, &quot;align&quot;:&quot;center&quot;, &quot;columngroup&quot;:&quot;Name&quot;, &quot;order&quot;: 5},' +
+    '&quot;form&quot;:{&quot;order&quot;: 4}' +
+  '},' +
+  '{&quot;name&quot;: &quot;Phone&quot;, &quot;caption&quot;:&quot;Phone&quot;, &quot;readonly&quot;:false, &quot;type&quot;: &quot;string&quot;, &quot;render&quot;: &quot;input&quot;, &quot;required&quot;: true,' +
+    '&quot;grid&quot;:{&quot;width&quot;:&quot;10%&quot;, &quot;align&quot;:&quot;center&quot;, &quot;columngroup&quot;:&quot;Contact&quot;, &quot;order&quot;: 6},' +
+    '&quot;form&quot;:{&quot;order&quot;: 5}' +
+  '},' +
+  '{&quot;name&quot;: &quot;Email&quot;, &quot;caption&quot;: &quot;Email&quot;, &quot;readonly&quot;:false, &quot;type&quot;: &quot;string&quot;, &quot;render&quot;: &quot;input&quot;, &quot;required&quot;: true,' +
+    '&quot;grid&quot;:{&quot;width&quot;:&quot;15%&quot;, &quot;align&quot;:&quot;center&quot;, &quot;columngroup&quot;:&quot;Contact&quot;, &quot;order&quot;: 7},' +
+    '&quot;form&quot;:{&quot;order&quot;: 6}' +
+  '}' +
+']}'</pre>
+<p>Now we need some underscore to handle the rendering.&nbsp; Because jqWidgets 
+isn't very consistent with regards to discrete controls (probably for reasons I 
+don't understand) we need to test the render field to handle different rendering 
+requirements:</p>
+<pre>&lt;script type=&quot;foo/bar&quot; id=&quot;newRecordTemplate&quot;&gt; 
+  &lt;% _.each(fields, function(field, key) { %&gt;
+    &lt;div class='row rowlabel' style='width:100%;'&gt;
+      &lt;div class='col-sm-4 padding-top4'&gt;&lt;%= field.caption %&gt;&lt;/div&gt;
+      &lt;% if (field.render=='password') { %&gt;
+        &lt;div class='col-sm-6'&gt;&lt;input style='padding-left:3px' id='&lt;%= field.name %&gt;' type=&quot;password&quot;/&gt;&lt;/div&gt;
+      &lt;% } else if (field.render=='lookup') { %&gt;
+        &lt;div class='col-sm-6'&gt;
+          &lt;div id ='&lt;%= field.name %&gt;'&gt;&lt;/div&gt;
+        &lt;/div&gt;
+      &lt;% } else { %&gt;
+        &lt;div class='col-sm-6'&gt;&lt;input style='padding-left:3px' id='&lt;%= field.name %&gt;'/&gt;&lt;/div&gt;
+      &lt;% } %&gt;
+    &lt;/div&gt;
+  &lt;% }) %&gt;
+&lt;/script&gt;</pre>
+<p>We also have a function that returns sorted fields based on the form field 
+ordering:</p>
+<pre>function ixGetFormFields(view) {
+  return sortFormFields(view)
+}
+
+function sortFormFields(view) {
+  var fields = view.fields
+  var columns = []
+
+  for (var i = 0; i &lt; fields.length; i++) {
+    var field = fields[i]
+
+    if (field.form !== undefined) {
+      columns.push({ key: field, order: field.form.order })
+    }
+  }
+
+  var sortedFields = columns.sort(function (x, y) { return x.order - y.order }).map(function (f) { return f.key })
+
+  return sortedFields
+}</pre>
+<p>Now, our HTML looks like this:</p>
+<pre>&lt;div id=&quot;newUser&quot;&gt;
+  &lt;div&gt;New User&lt;/div&gt; &lt;!-- The first div must be the popup window caption --&gt;
+  &lt;div style=&quot;overflow: hidden;&quot;&gt;
+    &lt;div id=&quot;newUserForm&quot;&gt;&lt;/div&gt;
+    &lt;div class='row rowlabel' style='width:100%;'&gt;
+      &lt;div class='col-sm-12 padding-top4 center-text'&gt;
+        &lt;input type=&quot;button&quot; id=&quot;Save&quot; value=&quot;Save&quot;/&gt;
+        &lt;input type=&quot;button&quot; id=&quot;Cancel&quot; value=&quot;Cancel&quot;/&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</pre>
+<p>Lastly, we compile the template with the specific JSON information and inject the resulting HTML into the div:</p>
+<pre>function ixCreateNewRecordForm(json, targetId, templateId) {
+  var newRecordFields = ixGetFormFields(json)
+  var template = $(&quot;#&quot; + templateId).html()
+  var html = _.template(template)
+  var output = html({ fields: newRecordFields })
+  $(&quot;#&quot; + targetId).html(output)
+}</pre>
+<p>And we call this function in our page's Javascript:</p>
+<pre>ixCreateNewRecordForm(json, &quot;newUserForm&quot;, &quot;newRecordTemplate&quot;)</pre>
+<p>Again, while it looks complicated, what we're doing here is creating a 
+repeatable pattern of code that can be </p>
 <h3>Fixing the Create User Callback Data</h3>
 <p>Recall that we are posting back the data from the widgets:</p>
 <pre>var datarow = {
@@ -600,8 +720,69 @@ preserve the control over the styling of the label and input field form. </p>
 <p>Here we're obviously posting back only the visible, writeable fields.&nbsp; 
 We don't need to touch the JSON to handle this, instead we just write a small 
 Javascript function that creates this literal object for us:</p>
+<pre>function ixGetNewRowRecord(view) {
+  var obj = {}
+  var fields = view.fields
+  var columns = []
+
+  for (var i = 0; i &lt; fields.length; i++) {
+    var field = fields[i]
+
+    if (field.form !== undefined) {
+      obj[field.name] = $(&quot;#&quot;+field.name).val()
+    }
+  }
+
+  return obj
+}</pre>
+<p>(I'm beginning to think I should define a general purpose iterator for 
+looping through grid and form fields!)</p>
+<p>We can now replace the hard-coded field list with the function call that 
+determines the writeable, visible fields from the JSON:</p>
+<pre>var datarow = ixGetNewRowRecord(json)</pre>
 <h2>Let's Review!</h2>
 <p>It would be good to review what we've accomplished so far.</p>
+<h3>What Our Form Template Looks Like Now</h3>
+<p>Here's the skeleton of what our page script and HTML looks like now:</p>
+<pre>&lt;head&gt;
+  &lt;title&gt;Users&lt;/title&gt;
+  &lt;!-- css and javasscript imports --&gt; 
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;!-- the underscore template --&gt;
+  &lt;script type=&quot;text/javascript&quot;&gt;
+    $(document).ready(function () {
+      &lt;!-- our view schema definition, which will eventually come from the server
+           instead of being hardcoded in the page --&gt;
+
+      // Initialize the UI
+      var json = JSON.parse(view)
+      ixCreateNewRecordForm(json, &quot;newUserForm&quot;, &quot;newRecordTemplate&quot;)
+      ixBindControls(json, theme)
+      ixInitializeNewRecordForm(json, theme, '/admin/createuser')
+      ixInitializeGrid(json, theme, &quot;/admin/userlist&quot;)
+      ixInitializeButtons()
+      ixInitializeEventHandlers(json, '/admin/deleteuser', '/admin/updateuser')
+    })
+  &lt;/script&gt;
+  &lt;div&gt;
+    &lt;h1&gt;Manage Users&lt;/h1&gt;
+  &lt;/div&gt;
+  &lt;!-- The HTML for rendering the grid and the popup --&gt;
+  &lt;div id=&quot;jqxgrid&quot;&gt;&lt;/div&gt;
+  &lt;div id=&quot;newRecord&quot;&gt;
+    &lt;div&gt;New User&lt;/div&gt; &lt;!-- The first div must be the popup window caption --&gt;
+    &lt;div style=&quot;overflow: hidden;&quot;&gt;
+      &lt;div id=&quot;newUserForm&quot;&gt;&lt;/div&gt;
+      &lt;div class='row rowlabel' style='width:100%;'&gt;
+        &lt;div class='col-sm-12 padding-top4 center-text'&gt;
+          &lt;input type=&quot;button&quot; id=&quot;Save&quot; value=&quot;Save&quot;/&gt;
+          &lt;input type=&quot;button&quot; id=&quot;Cancel&quot; value=&quot;Cancel&quot;/&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/body&gt;</pre>
 <h3>One Authority on the Rendering of the Grid and New Record Form</h3>
 <p>While it can look complicated, what we've achieved is taking six separate 
 sections of the HTML page and replacing them with generated data from a single 
@@ -618,6 +799,91 @@ for our grids.&nbsp; </p>
 mistakes -- a misplaced quote mark or curly brace, a typo in a variable name 
 reference, etc. -- this approach significantly reduces the error prone, fire up 
 the browser debugger, process that we all go through when debugging web pages.</p>
+<h2>The Proof is in the Pudding - Let's Try Another Form</h2>
+<p>Another form that the client needs is the ability to manage centers.&nbsp; 
+Currently, using the <code>jqxDataTable</code> control, which is definitely not as 
+sophisticated as the grid control:</p>
+<p><img border="0" src="grid2.png" width="817" height="150"></p>
+<p>So we're going to spiff this up with the jqxGrid instead.&nbsp; I've already 
+defined the AJAX callback functions for the current functionality, so all we 
+need to do is define the view schema and we should be ready to rock and roll.&nbsp; 
+The only caveat to this is for centers, the current list of users is loaded 
+asynchronously first.&nbsp; Here's the entire script:</p>
+<pre>&lt;script type=&quot;text/javascript&quot;&gt;
+  $(document).ready(function () {
+  loadUserList()
+})
+
+function loadUserList() {
+  $.ajax({
+    url: '/admin/userlist',
+    async: true,
+    cache: false,
+    type: &quot;get&quot;,
+    success: function (data) {
+      var usernames = data.map(function (f) { return { value: f.UserName } })
+        var jsonString = JSON.stringify(usernames)
+        initializePage(jsonString)
+      },
+    fail: function (data) {
+      alert(&quot;A problem occurred trying to load the user list.&quot;);
+    }
+  });
+}
+
+function initializePage(userList) {
+  var theme = 'energyblue'
+  var view = '{&quot;fields&quot;: [' +
+    '{&quot;name&quot;: &quot;Id&quot;, &quot;type&quot;: &quot;integer&quot;},' +
+    '{&quot;name&quot;: &quot;CenterName&quot;, &quot;readonly&quot;:false, &quot;type&quot;: &quot;string&quot;, &quot;render&quot;: &quot;input&quot;, &quot;required&quot;: true, &quot;caption&quot;: &quot;Center Name&quot;, ' +
+      '&quot;grid&quot;:{&quot;width&quot;:&quot;20%&quot;, &quot;align&quot;:&quot;center&quot;, &quot;order&quot;: 0},' +
+      '&quot;form&quot;:{&quot;order&quot;: 0}' +
+    '},' +
+    '{&quot;name&quot;: &quot;UserName&quot;, &quot;readonly&quot;:false, &quot;type&quot;: &quot;string&quot;, &quot;render&quot;: &quot;lookup&quot;, &quot;caption&quot;: &quot;Administrator&quot;, &quot;initialselection&quot;: 0, &quot;lookupdata&quot;:' + userList + ', ' +
+      '&quot;grid&quot;:{&quot;width&quot;:&quot;10%&quot;, &quot;align&quot;:&quot;center&quot;, &quot;order&quot;: 1},' +
+      '&quot;form&quot;:{&quot;order&quot;: 1}' +
+    '},' +
+    '{&quot;name&quot;: &quot;Address&quot;, &quot;caption&quot;:&quot;Address&quot;, &quot;readonly&quot;:false, &quot;type&quot;: &quot;string&quot;, &quot;render&quot;: &quot;input&quot;, &quot;required&quot;: true, ' +
+      '&quot;grid&quot;:{&quot;width&quot;:&quot;20%&quot;, &quot;align&quot;:&quot;center&quot;, &quot;order&quot;: 2, &quot;columngroup&quot;:&quot;Address&quot;},' +
+      '&quot;form&quot;:{&quot;order&quot;: 2}' +
+    '},' +
+    '{&quot;name&quot;: &quot;City&quot;, &quot;caption&quot;:&quot;City&quot;, &quot;readonly&quot;:false, &quot;type&quot;: &quot;string&quot;, &quot;render&quot;: &quot;input&quot;, &quot;required&quot;: true, ' +
+      '&quot;grid&quot;:{&quot;width&quot;:&quot;10%&quot;, &quot;align&quot;:&quot;center&quot;, &quot;order&quot;: 3, &quot;columngroup&quot;:&quot;Address&quot;},' +
+      '&quot;form&quot;:{&quot;order&quot;: 3}' +
+    '},' +
+    '{&quot;name&quot;: &quot;State&quot;, &quot;caption&quot;:&quot;State&quot;, &quot;readonly&quot;:false, &quot;type&quot;: &quot;string&quot;, &quot;render&quot;: &quot;input&quot;, &quot;required&quot;: true, ' +
+      '&quot;grid&quot;:{&quot;width&quot;:&quot;10%&quot;, &quot;align&quot;:&quot;center&quot;, &quot;order&quot;: 4, &quot;columngroup&quot;:&quot;Address&quot;},' +
+      '&quot;form&quot;:{&quot;order&quot;: 4}' +
+    '},' +
+    '{&quot;name&quot;: &quot;Zip&quot;, &quot;caption&quot;:&quot;Zip&quot;, &quot;readonly&quot;:false, &quot;type&quot;: &quot;string&quot;, &quot;render&quot;: &quot;input&quot;, &quot;required&quot;: true, ' +
+      '&quot;grid&quot;:{&quot;width&quot;:&quot;10%&quot;, &quot;align&quot;:&quot;center&quot;, &quot;order&quot;: 5, &quot;columngroup&quot;:&quot;Address&quot;},' +
+      '&quot;form&quot;:{&quot;order&quot;: 5}' +
+    '},' +
+    '{&quot;name&quot;: &quot;Phone&quot;, &quot;caption&quot;:&quot;Phone&quot;, &quot;readonly&quot;:false, &quot;type&quot;: &quot;string&quot;, &quot;render&quot;: &quot;input&quot;, &quot;required&quot;: true, ' +
+      '&quot;grid&quot;:{&quot;width&quot;:&quot;10%&quot;, &quot;align&quot;:&quot;center&quot;, &quot;order&quot;: 6, &quot;columngroup&quot;:&quot;Contact&quot;},' +
+      '&quot;form&quot;:{&quot;order&quot;: 7}' +
+    '},' +
+    '{&quot;name&quot;: &quot;Email&quot;, &quot;caption&quot;:&quot;Email&quot;, &quot;readonly&quot;:false, &quot;type&quot;: &quot;string&quot;, &quot;render&quot;: &quot;input&quot;, &quot;required&quot;: true, ' +
+      '&quot;grid&quot;:{&quot;width&quot;:&quot;10%&quot;, &quot;align&quot;:&quot;center&quot;, &quot;order&quot;: 7, &quot;columngroup&quot;:&quot;Contact&quot;},' +
+      '&quot;form&quot;:{&quot;order&quot;: 8}' +
+    '}' +
+  ']}'
+
+  // Initialize the UI
+  var json = JSON.parse(view)
+  ixCreateNewRecordForm(json, &quot;newCenterForm&quot;, &quot;newRecordTemplate&quot;)
+  ixBindControls(json, theme)
+  ixInitializeNewRecordForm(json, theme, '/admin/createcenter')
+  ixInitializeGrid(json, theme, &quot;/admin/centerlist&quot;)
+  ixInitializeButtons()
+  ixInitializeEventHandlers(json, '/admin/deletecenter', '/admin/updatecenter')
+}
+&lt;/script&gt;</pre>
+<p>And the result looks much nicer:</p>
+<p><img border="0" src="grid3.png" width="913" height="218"></p>
+<p>and the &quot;New Center&quot; popup window:</p>
+<p><img border="0" src="input2.png" width="504" height="395"></p>
+<p>&nbsp;</p>
 <p>&nbsp;</p>
 <p>&nbsp;</p>
 <p>&nbsp;</p>
